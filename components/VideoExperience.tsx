@@ -257,6 +257,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   };
 
   const handleVideoTitleEdit = (videoId: string) => {
+    console.log('handleVideoTitleEdit called with videoId:', videoId, 'isAdminMode:', isAdminMode);
     setEditingVideoTitle(videoId);
   };
 
@@ -702,6 +703,9 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                        </div>
                        <div className={`text-xs text-center px-4 py-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>
                          💡 Click on titles, subtitles, or video names to edit them
+                       </div>
+                       <div className={`text-xs text-center px-4 py-2 rounded-lg mt-2 ${isDarkMode ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-green-100 text-green-700 border border-green-300'}`}>
+                         🔧 Debug: Admin Mode: {isAdminMode ? 'ON' : 'OFF'} | Videos: {videos.length} | Current: {currentVideo?.id || 'None'}
                        </div>
                      </div>
                    )}
