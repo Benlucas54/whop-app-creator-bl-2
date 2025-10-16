@@ -446,50 +446,68 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                   group
                 `}
               >
-                <button
-                  onClick={() => handleVideoSelect(video)}
-                  className="flex items-center gap-3 flex-1 min-w-0"
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Play className="w-4 h-4 text-white ml-0.5" />
-                  </div>
-                  
-                  {!sidebarCollapsed && (
-                    <div className="flex-1 min-w-0">
-                      {editingVideoTitle === video.id && isAdminMode ? (
-                        <input
-                          type="text"
-                          defaultValue={video.title}
-                          onBlur={(e) => handleVideoTitleSave(video.id, e.target.value)}
-                          onKeyDown={(e) => handleVideoTitleKeyDown(e, video.id)}
-                          className={`
-                            w-full bg-transparent border-none outline-none font-medium text-sm
-                            ${currentVideo?.id === video.id 
-                              ? (isDarkMode ? 'text-white' : 'text-gray-900')
-                              : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
-                            }
-                          `}
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <h3 
-                          onClick={isAdminMode ? (e) => {
-                            e.stopPropagation();
-                            handleVideoTitleEdit(video.id);
-                          } : undefined}
-                          className={`font-medium truncate ${
-                            currentVideo?.id === video.id 
-                              ? (isDarkMode ? 'text-white' : 'text-gray-900')
-                              : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
-                          } ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-                        >
-                          {video.title}
-                        </h3>
-                      )}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <button
+                    onClick={() => handleVideoSelect(video)}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Play className="w-4 h-4 text-white ml-0.5" />
                     </div>
+                    
+                    {!sidebarCollapsed && (
+                      <div className="flex-1 min-w-0">
+                        {editingVideoTitle === video.id && isAdminMode ? (
+                          <input
+                            type="text"
+                            defaultValue={video.title}
+                            onBlur={(e) => handleVideoTitleSave(video.id, e.target.value)}
+                            onKeyDown={(e) => handleVideoTitleKeyDown(e, video.id)}
+                            className={`
+                              w-full bg-transparent border-none outline-none font-medium text-sm
+                              ${currentVideo?.id === video.id 
+                                ? (isDarkMode ? 'text-white' : 'text-gray-900')
+                                : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
+                              }
+                            `}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <h3 
+                            className={`font-medium truncate ${
+                              currentVideo?.id === video.id 
+                                ? (isDarkMode ? 'text-white' : 'text-gray-900')
+                                : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
+                            } ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                          >
+                            {video.title}
+                          </h3>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                  
+                  {/* Edit Title Button - Admin Only */}
+                  {!sidebarCollapsed && isAdminMode && !editingVideoTitle && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleVideoTitleEdit(video.id);
+                      }}
+                      className={`
+                        p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100
+                        ${isDarkMode 
+                          ? 'hover:bg-purple-500/20 text-purple-400 hover:text-purple-300' 
+                          : 'hover:bg-purple-100 text-purple-500 hover:text-purple-600'
+                        }
+                      `}
+                      title="Edit title"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
                   )}
-                </button>
+                </div>
 
                 {/* Delete Button - Admin Only */}
                 {accessLevel === 'admin' && isAdminMode && (
