@@ -399,11 +399,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                           {video.title}
                         </h3>
                       )}
-                      <p className={`text-sm truncate ${
-                        isDarkMode ? 'text-slate-400' : 'text-slate-500'
-                      }`}>
-                        {video.duration} • {video.createdAt.toLocaleDateString()}
-                      </p>
                     </div>
                   )}
                 </button>
