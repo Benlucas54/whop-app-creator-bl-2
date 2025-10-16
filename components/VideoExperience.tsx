@@ -352,13 +352,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
         ? 'bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900' 
         : 'bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100'
     }`}>
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile Sidebar Overlay - Removed to allow interaction with main content */}
 
       {/* Sidebar */}
       <div className={`
@@ -603,7 +597,8 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
       <div className={`
         transition-all duration-300 ease-in-out
         ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-80'}
-        ${sidebarOpen ? 'ml-80' : 'ml-0'}
+        ml-0
+        ${sidebarOpen ? 'lg:shadow-none shadow-lg border-l border-slate-200/20' : ''}
       `}>
         {/* Header */}
         <div className="flex items-center justify-between p-6">
