@@ -194,6 +194,12 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
     setVideos(prev => prev.map(video => 
       video.id === videoId ? { ...video, title: newTitle } : video
     ));
+    
+    // Update the current video title if it's the one being edited
+    if (currentVideo?.id === videoId) {
+      setCurrentVideo(prev => prev ? { ...prev, title: newTitle } : null);
+    }
+    
     setEditingVideoTitle(null);
   };
 
