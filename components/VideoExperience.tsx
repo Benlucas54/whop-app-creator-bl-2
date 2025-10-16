@@ -636,22 +636,29 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                 }}
                 autoFocus
               />
-            ) : (
-              <h1
-                onClick={isAdminMode ? handleTitleEdit : undefined}
-                className={`text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-tight transition-opacity ${
-                  isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
-                }`}
-                style={{
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
-                }}
-              >
-                {title}
-              </h1>
-            )}
+                   ) : (
+                     <div className="relative">
+                       <h1
+                         onClick={isAdminMode ? handleTitleEdit : undefined}
+                         className={`text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-tight transition-opacity ${
+                           isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+                         }`}
+                         style={{
+                           background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                           WebkitBackgroundClip: 'text',
+                           WebkitTextFillColor: 'transparent',
+                           backgroundClip: 'text'
+                         }}
+                       >
+                         {title}
+                       </h1>
+                       {isAdminMode && (
+                         <div className={`absolute -top-2 -right-2 text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-300'}`}>
+                           ✏️
+                         </div>
+                       )}
+                     </div>
+                   )}
 
             {editingSubtitle && isAdminMode ? (
               <input
@@ -666,26 +673,38 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                 `}
                 autoFocus
               />
-            ) : (
-              <p
-                onClick={isAdminMode ? handleSubtitleEdit : undefined}
-                className={`text-xl md:text-2xl font-light transition-opacity ${
-                  isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
-                } ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}
-              >
-                {subtitle}
-              </p>
-            )}
+                   ) : (
+                     <div className="relative inline-block">
+                       <p
+                         onClick={isAdminMode ? handleSubtitleEdit : undefined}
+                         className={`text-xl md:text-2xl font-light transition-opacity ${
+                           isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+                         } ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}
+                       >
+                         {subtitle}
+                       </p>
+                       {isAdminMode && (
+                         <div className={`absolute -top-1 -right-2 text-xs px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-slate-500/20 text-slate-300 border border-slate-500/30' : 'bg-slate-100 text-slate-600 border border-slate-300'}`}>
+                           ✏️
+                         </div>
+                       )}
+                     </div>
+                   )}
 
-            {/* Admin Mode Indicator */}
-            {isAdminMode && (
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                  Admin Edit Mode
-                </span>
-              </div>
-            )}
+                   {/* Admin Mode Indicator */}
+                   {isAdminMode && (
+                     <div className="mt-4 flex flex-col items-center justify-center gap-2">
+                       <div className="flex items-center gap-2">
+                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                         <span className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                           Admin Edit Mode
+                         </span>
+                       </div>
+                       <div className={`text-xs text-center px-4 py-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>
+                         💡 Click on titles, subtitles, or video names to edit them
+                       </div>
+                     </div>
+                   )}
             
             {/* Save Indicator */}
             {isSaving && (
@@ -709,28 +728,37 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                 }
                 shadow-2xl
               `}>
-                <div className="flex items-center justify-between mb-6">
-                  {editingVideoTitle === currentVideo.id && isAdminMode ? (
-                    <input
-                      type="text"
-                      defaultValue={currentVideo.title}
-                      onBlur={(e) => handleVideoTitleSave(currentVideo.id, e.target.value)}
-                      onKeyDown={(e) => handleVideoTitleKeyDown(e, currentVideo.id)}
-                      className={`
-                        text-2xl font-semibold bg-transparent border-none outline-none
-                        ${isDarkMode ? 'text-white' : 'text-gray-900'}
-                      `}
-                      autoFocus
-                    />
-                  ) : (
-                    <h2 
-                      onClick={isAdminMode ? () => handleVideoTitleEdit(currentVideo.id) : undefined}
-                      className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
-                    >
-                      {currentVideo.title}
-                    </h2>
-                  )}
-                </div>
+                       <div className="flex items-center justify-between mb-6">
+                         <div className="flex-1">
+                           {editingVideoTitle === currentVideo.id && isAdminMode ? (
+                             <input
+                               type="text"
+                               defaultValue={currentVideo.title}
+                               onBlur={(e) => handleVideoTitleSave(currentVideo.id, e.target.value)}
+                               onKeyDown={(e) => handleVideoTitleKeyDown(e, currentVideo.id)}
+                               className={`
+                                 text-2xl font-semibold bg-transparent border-none outline-none
+                                 ${isDarkMode ? 'text-white' : 'text-gray-900'}
+                               `}
+                               autoFocus
+                             />
+                           ) : (
+                             <div className="flex items-center gap-3">
+                               <h2 
+                                 onClick={isAdminMode ? () => handleVideoTitleEdit(currentVideo.id) : undefined}
+                                 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                               >
+                                 {currentVideo.title}
+                               </h2>
+                               {isAdminMode && (
+                                 <div className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>
+                                   ✏️ Click to edit
+                                 </div>
+                               )}
+                             </div>
+                           )}
+                         </div>
+                       </div>
 
                 {/* Admin Video URL Edit */}
                 {isAdminMode && (
