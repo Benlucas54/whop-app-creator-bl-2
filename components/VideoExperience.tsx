@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Menu, 
   X, 
@@ -36,10 +36,8 @@ interface VideoItem {
   id: string;
   title: string;
   url: string;
-  embedUrl?: string;
-  thumbnail?: string;
-  duration?: string;
-  createdAt: Date;
+  duration: string;
+  createdAt: string;
 }
 
 export default function VideoExperience({ user, experience, accessLevel, hasAccess }: VideoExperienceProps) {
@@ -57,34 +55,15 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [title, setTitle] = useState('Welcome to Your Video Experience');
   const [subtitle, setSubtitle] = useState('Share, react, and engage with videos like never before');
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Mock video list - in a real app, this would come from your backend
-  const [videos, setVideos] = useState<VideoItem[]>([
-    {
-      id: '1',
-      title: 'Introduction to Our Platform',
-      url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-      embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      duration: '3:32',
-      createdAt: new Date('2024-01-15')
-    },
-    {
-      id: '2', 
-      title: 'Getting Started Guide',
-      url: 'https://loom.com/share/example123',
-      embedUrl: 'https://www.loom.com/embed/example123',
-      duration: '5:45',
-      createdAt: new Date('2024-01-20')
-    },
-    {
-      id: '3',
-      title: 'Advanced Features Tutorial',
-      url: 'https://youtube.com/watch?v=example456',
-      embedUrl: 'https://www.youtube.com/embed/example456',
-      duration: '8:12',
-      createdAt: new Date('2024-01-25')
-    }
-  ]);
+  // Load data from storage on component mount
+  useEffect(() => {
+    loadExperienceData();
+  }, []);
 
   useEffect(() => {
     // Set the first video as current by default
@@ -92,6 +71,61 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
       setCurrentVideo(videos[0]);
     }
   }, [videos, currentVideo]);
+
+  const loadExperienceData = async () => {
+    try {
+      setIsLoadingData(true);
+      const response = await fetch(`/api/experience-data?experienceId=${experience.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTitle(data.title || 'Welcome to Your Video Experience');
+        setSubtitle(data.subtitle || 'Share, react, and engage with videos like never before');
+        
+        // Convert string dates back to Date objects for display
+        const videosWithDates = data.videos?.map((video: VideoItem) => ({
+          ...video,
+          createdAt: video.createdAt
+        })) || [];
+        
+        setVideos(videosWithDates);
+      }
+    } catch (error) {
+      console.error('Error loading experience data:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const saveExperienceData = async (data: { title: string; subtitle: string; videos: VideoItem[] }) => {
+    try {
+      setIsSaving(true);
+      const response = await fetch(`/api/experience-data?experienceId=${experience.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data');
+      }
+    } catch (error) {
+      console.error('Error saving experience data:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debounced save function
+  const debouncedSave = (data: { title: string; subtitle: string; videos: VideoItem[] }) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveExperienceData(data);
+    }, 1000); // Save after 1 second of inactivity
+  };
 
   const getVideoEmbedUrl = (url: string): string | null => {
     // YouTube video handling
@@ -148,15 +182,22 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
       const newVideo: VideoItem = {
         id: Date.now().toString(),
         title: 'New Video',
-        url: videoUrl,
-        embedUrl: embedUrl,
+        url: embedUrl,
         duration: '0:00',
-        createdAt: new Date()
+        createdAt: new Date().toISOString()
       };
       
-      setVideos(prev => [newVideo, ...prev]);
+      const updatedVideos = [...videos, newVideo];
+      setVideos(updatedVideos);
       setCurrentVideo(newVideo);
       setVideoUrl('');
+      
+      // Save the updated data
+      debouncedSave({
+        title,
+        subtitle,
+        videos: updatedVideos,
+      });
     } else {
       alert('Please enter a valid YouTube or Loom video URL');
     }
@@ -185,10 +226,22 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
 
   const handleTitleSave = () => {
     setEditingTitle(false);
+    // Save the updated data
+    debouncedSave({
+      title,
+      subtitle,
+      videos,
+    });
   };
 
   const handleSubtitleSave = () => {
     setEditingSubtitle(false);
+    // Save the updated data
+    debouncedSave({
+      title,
+      subtitle,
+      videos,
+    });
   };
 
   const handleTitleKeyDown = (e: React.KeyboardEvent) => {
@@ -208,9 +261,10 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   };
 
   const handleVideoTitleSave = (videoId: string, newTitle: string) => {
-    setVideos(prev => prev.map(video => 
+    const updatedVideos = videos.map(video => 
       video.id === videoId ? { ...video, title: newTitle } : video
-    ));
+    );
+    setVideos(updatedVideos);
     
     // Update the current video title if it's the one being edited
     if (currentVideo?.id === videoId) {
@@ -218,6 +272,13 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
     }
     
     setEditingVideoTitle(null);
+    
+    // Save the updated data
+    debouncedSave({
+      title,
+      subtitle,
+      videos: updatedVideos,
+    });
   };
 
   const handleVideoTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, videoId: string) => {
@@ -235,14 +296,22 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const handleVideoUrlSave = (videoId: string, newUrl: string) => {
     const embedUrl = getVideoEmbedUrl(newUrl);
     if (embedUrl) {
-      setVideos(prev => prev.map(video => 
+      const updatedVideos = videos.map(video => 
         video.id === videoId ? { ...video, url: embedUrl } : video
-      ));
+      );
+      setVideos(updatedVideos);
       
       // Update the current video URL if it's the one being edited
       if (currentVideo?.id === videoId) {
         setCurrentVideo(prev => prev ? { ...prev, url: embedUrl } : null);
       }
+      
+      // Save the updated data
+      debouncedSave({
+        title,
+        subtitle,
+        videos: updatedVideos,
+      });
     } else {
       alert('Please enter a valid YouTube or Loom video URL');
     }
@@ -257,6 +326,25 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
       setEditingVideoUrl(null);
     }
   };
+
+  if (isLoadingData) {
+    return (
+      <div className={`min-h-screen transition-all duration-500 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900' 
+          : 'bg-gradient-to-br from-slate-50 via-gray-100 to-slate-100'
+      }`}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className={`text-lg ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+              Loading your video experience...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-all duration-500 ${
@@ -408,10 +496,18 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setVideos(prev => prev.filter(v => v.id !== video.id));
+                      const updatedVideos = videos.filter(v => v.id !== video.id);
+                      setVideos(updatedVideos);
                       if (currentVideo?.id === video.id) {
                         setCurrentVideo(null);
                       }
+                      
+                      // Save the updated data
+                      debouncedSave({
+                        title,
+                        subtitle,
+                        videos: updatedVideos,
+                      });
                     }}
                     className={`
                       p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100
@@ -456,7 +552,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
               </div>
               {!sidebarCollapsed && (
                 <span className={`font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
-                  {isAdminMode ? 'Exit Admin Mode' : 'Admin Settings'}
+                  {isAdminMode ? 'Save & Exit' : 'Admin Settings'}
                 </span>
               )}
             </button>
@@ -592,7 +688,17 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
               <div className="mt-4 flex items-center justify-center gap-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 <span className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
-                  Admin Mode Active
+                  Admin Edit Mode
+                </span>
+              </div>
+            )}
+            
+            {/* Save Indicator */}
+            {isSaving && (
+              <div className="mt-2 flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  Saving changes...
                 </span>
               </div>
             )}
