@@ -635,11 +635,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                       {currentVideo.title}
                     </h2>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>{currentVideo.duration}</span>
-                    <span>•</span>
-                    <span>{currentVideo.createdAt.toLocaleDateString()}</span>
-                  </div>
                 </div>
 
                 {/* Admin Video URL Edit */}
