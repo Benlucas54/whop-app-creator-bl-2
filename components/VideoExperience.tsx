@@ -52,6 +52,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const [isLoading, setIsLoading] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingSubtitle, setEditingSubtitle] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [title, setTitle] = useState('Welcome to Your Video Experience');
   const [subtitle, setSubtitle] = useState('Share, react, and engage with videos like never before');
 
@@ -243,37 +244,38 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
           </div>
         </div>
 
-        {/* Add Video Button */}
-        <div className="p-4">
-          <button
-            onClick={() => {/* Add new video logic */}}
-            className={`
-              w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200
-              ${isDarkMode 
-                ? 'bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 hover:border-purple-500/30' 
-                : 'bg-slate-100/50 hover:bg-slate-200/50 border border-slate-200/50 hover:border-purple-400/30'
-              }
-              group
-            `}
-          >
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Plus className="w-4 h-4 text-white" />
-            </div>
-            {!sidebarCollapsed && (
-              <span className={`font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
-                Add Video
-              </span>
-            )}
-          </button>
-        </div>
+        {/* Add Video Button - Admin Only */}
+        {accessLevel === 'admin' && isAdminMode && (
+          <div className="p-4">
+            <button
+              onClick={() => {/* Add new video logic */}}
+              className={`
+                w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                ${isDarkMode 
+                  ? 'bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 hover:border-purple-500/30' 
+                  : 'bg-slate-100/50 hover:bg-slate-200/50 border border-slate-200/50 hover:border-purple-400/30'
+                }
+                group
+              `}
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Plus className="w-4 h-4 text-white" />
+              </div>
+              {!sidebarCollapsed && (
+                <span className={`font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                  Add Video
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Video List */}
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           <div className="space-y-2">
             {videos.map((video) => (
-              <button
+              <div
                 key={video.id}
-                onClick={() => handleVideoSelect(video)}
                 className={`
                   w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left
                   ${currentVideo?.id === video.id
@@ -283,30 +285,91 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                   group
                 `}
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Play className="w-4 h-4 text-white ml-0.5" />
-                </div>
-                
-                {!sidebarCollapsed && (
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`font-medium truncate ${
-                      currentVideo?.id === video.id 
-                        ? (isDarkMode ? 'text-white' : 'text-gray-900')
-                        : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
-                    }`}>
-                      {video.title}
-                    </h3>
-                    <p className={`text-sm truncate ${
-                      isDarkMode ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      {video.duration} • {video.createdAt.toLocaleDateString()}
-                    </p>
+                <button
+                  onClick={() => handleVideoSelect(video)}
+                  className="flex items-center gap-3 flex-1 min-w-0"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Play className="w-4 h-4 text-white ml-0.5" />
                   </div>
+                  
+                  {!sidebarCollapsed && (
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`font-medium truncate ${
+                        currentVideo?.id === video.id 
+                          ? (isDarkMode ? 'text-white' : 'text-gray-900')
+                          : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
+                      }`}>
+                        {video.title}
+                      </h3>
+                      <p className={`text-sm truncate ${
+                        isDarkMode ? 'text-slate-400' : 'text-slate-500'
+                      }`}>
+                        {video.duration} • {video.createdAt.toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </button>
+
+                {/* Delete Button - Admin Only */}
+                {accessLevel === 'admin' && isAdminMode && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVideos(prev => prev.filter(v => v.id !== video.id));
+                      if (currentVideo?.id === video.id) {
+                        setCurrentVideo(null);
+                      }
+                    }}
+                    className={`
+                      p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100
+                      ${isDarkMode 
+                        ? 'hover:bg-red-500/20 text-red-400 hover:text-red-300' 
+                        : 'hover:bg-red-100 text-red-500 hover:text-red-600'
+                      }
+                    `}
+                    title="Delete video"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         </div>
+
+        {/* Admin Settings Button */}
+        {accessLevel === 'admin' && (
+          <div className="p-4 border-t border-slate-700/30">
+            <button
+              onClick={() => setIsAdminMode(!isAdminMode)}
+              className={`
+                w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                ${isAdminMode 
+                  ? `${isDarkMode ? 'bg-red-500/20 border border-red-500/30' : 'bg-red-100/50 border border-red-300/50'}`
+                  : `${isDarkMode 
+                    ? 'bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 hover:border-red-500/30' 
+                    : 'bg-slate-100/50 hover:bg-slate-200/50 border border-slate-200/50 hover:border-red-400/30'
+                  }`
+                }
+                group
+              `}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform ${
+                isAdminMode 
+                  ? 'bg-red-500' 
+                  : 'bg-gradient-to-br from-red-500 to-orange-500'
+              }`}>
+                <Settings className="w-4 h-4 text-white" />
+              </div>
+              {!sidebarCollapsed && (
+                <span className={`font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
+                  {isAdminMode ? 'Exit Admin Mode' : 'Admin Settings'}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* User Info */}
         {!sidebarCollapsed && (
@@ -371,7 +434,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
         <div className="px-6 pb-8">
           {/* Editable Header */}
           <div className="text-center mb-12">
-            {editingTitle ? (
+            {editingTitle && isAdminMode ? (
               <input
                 type="text"
                 value={title}
@@ -393,8 +456,10 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
               />
             ) : (
               <h1
-                onClick={handleTitleEdit}
-                className="text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-tight cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={isAdminMode ? handleTitleEdit : undefined}
+                className={`text-6xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight tracking-tight transition-opacity ${
+                  isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+                }`}
                 style={{
                   background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
                   WebkitBackgroundClip: 'text',
@@ -406,7 +471,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
               </h1>
             )}
 
-            {editingSubtitle ? (
+            {editingSubtitle && isAdminMode ? (
               <input
                 type="text"
                 value={subtitle}
@@ -421,13 +486,23 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
               />
             ) : (
               <p
-                onClick={handleSubtitleEdit}
-                className={`text-xl md:text-2xl font-light cursor-pointer hover:opacity-80 transition-opacity ${
-                  isDarkMode ? 'text-slate-300' : 'text-slate-600'
-                }`}
+                onClick={isAdminMode ? handleSubtitleEdit : undefined}
+                className={`text-xl md:text-2xl font-light transition-opacity ${
+                  isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'
+                } ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}
               >
                 {subtitle}
               </p>
+            )}
+
+            {/* Admin Mode Indicator */}
+            {isAdminMode && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+                  Admin Mode Active
+                </span>
+              </div>
             )}
           </div>
 
@@ -465,99 +540,98 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                   />
                 </div>
 
-                {/* Video Controls */}
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => window.open(currentVideo.url, '_blank')}
-                    className={`
-                      px-6 py-3 rounded-xl font-semibold transition-all duration-200
-                      bg-gradient-to-r from-purple-500 to-blue-500 text-white
-                      hover:from-purple-600 hover:to-blue-600 hover:scale-105
-                      shadow-lg hover:shadow-xl
-                    `}
-                  >
-                    Open Original
-                  </button>
-                  
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setCurrentVideo(null)}
-                      className={`
-                        px-4 py-2 rounded-lg font-medium transition-colors
-                        ${isDarkMode 
-                          ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300' 
-                          : 'bg-slate-200/50 hover:bg-slate-300/50 text-slate-600'
-                        }
-                      `}
-                    >
-                      Close Video
-                    </button>
-                  </div>
-                </div>
               </div>
             ) : (
-              /* Add Video Interface */
-              <div className={`
-                rounded-2xl p-8 transition-all duration-300
-                ${isDarkMode 
-                  ? 'bg-slate-900/50 backdrop-blur-xl border border-slate-700/50' 
-                  : 'bg-white/50 backdrop-blur-xl border border-slate-200/50'
-                }
-                shadow-2xl
-              `}>
-                <h2 className={`text-3xl font-semibold mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Add New Video
-                </h2>
-                
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <input
-                      type="url"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      placeholder="Paste your Loom or YouTube URL here..."
-                      className={`
-                        flex-1 px-6 py-4 rounded-xl text-lg font-normal focus:outline-none transition-all duration-200
-                        ${isDarkMode 
-                          ? 'bg-slate-800/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-purple-500/50' 
-                          : 'bg-white/50 border border-slate-300/50 text-gray-900 placeholder-slate-500 focus:border-purple-400/50'
-                        }
-                      `}
-                    />
-                    <button
-                      onClick={handleLoadVideo}
-                      disabled={!videoUrl.trim() || isLoading}
-                      className="
-                        px-8 py-4 rounded-xl text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed
-                        bg-gradient-to-r from-purple-500 to-blue-500 text-white
-                        hover:from-purple-600 hover:to-blue-600 hover:scale-105
-                        transition-all duration-200 shadow-lg hover:shadow-xl
-                      "
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Loading...
-                        </div>
-                      ) : (
-                        'Load Video'
-                      )}
-                    </button>
-                  </div>
+              /* Add Video Interface - Admin Only */
+              accessLevel === 'admin' && isAdminMode ? (
+                <div className={`
+                  rounded-2xl p-8 transition-all duration-300
+                  ${isDarkMode 
+                    ? 'bg-slate-900/50 backdrop-blur-xl border border-slate-700/50' 
+                    : 'bg-white/50 backdrop-blur-xl border border-slate-200/50'
+                  }
+                  shadow-2xl
+                `}>
+                  <h2 className={`text-3xl font-semibold mb-8 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Add New Video
+                  </h2>
                   
-                  <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Supports YouTube and Loom video links
+                  <div className="space-y-6">
+                    <div className="flex gap-4">
+                      <input
+                        type="url"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="Paste your Loom or YouTube URL here..."
+                        className={`
+                          flex-1 px-6 py-4 rounded-xl text-lg font-normal focus:outline-none transition-all duration-200
+                          ${isDarkMode 
+                            ? 'bg-slate-800/50 border border-slate-600/50 text-white placeholder-slate-400 focus:border-purple-500/50' 
+                            : 'bg-white/50 border border-slate-300/50 text-gray-900 placeholder-slate-500 focus:border-purple-400/50'
+                          }
+                        `}
+                      />
+                      <button
+                        onClick={handleLoadVideo}
+                        disabled={!videoUrl.trim() || isLoading}
+                        className="
+                          px-8 py-4 rounded-xl text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed
+                          bg-gradient-to-r from-purple-500 to-blue-500 text-white
+                          hover:from-purple-600 hover:to-blue-600 hover:scale-105
+                          transition-all duration-200 shadow-lg hover:shadow-xl
+                        "
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Loading...
+                          </div>
+                        ) : (
+                          'Load Video'
+                        )}
+                      </button>
+                    </div>
+                    
+                    <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Supports YouTube and Loom video links
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Default Message for Non-Admins */
+                <div className={`
+                  rounded-2xl p-8 transition-all duration-300 text-center
+                  ${isDarkMode 
+                    ? 'bg-slate-900/50 backdrop-blur-xl border border-slate-700/50' 
+                    : 'bg-white/50 backdrop-blur-xl border border-slate-200/50'
+                  }
+                  shadow-2xl
+                `}>
+                  <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play className="w-8 h-8 text-white ml-1" />
+                  </div>
+                  <h2 className={`text-2xl font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    No Video Selected
+                  </h2>
+                  <p className={`text-lg ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Select a video from the sidebar to start watching
                   </p>
                 </div>
-              </div>
+              )
             )}
           </div>
 
           {/* Footer */}
           <div className="text-center mt-16">
-            <p className={`text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-              Click on the heading or subheading to edit them
-            </p>
+            {isAdminMode ? (
+              <p className={`text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                Click on the heading or subheading to edit them
+              </p>
+            ) : (
+              <p className={`text-sm ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                Experience: Loom Embed • Powered by Whop
+              </p>
+            )}
           </div>
         </div>
       </div>
