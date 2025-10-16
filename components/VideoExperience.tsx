@@ -473,7 +473,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                               currentVideo?.id === video.id 
                                 ? (isDarkMode ? 'text-white' : 'text-gray-900')
                                 : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
-                            } ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                            }`}
                           >
                             {video.title}
                           </h3>
@@ -482,25 +482,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                     )}
                   </button>
                   
-                  {/* Edit Title Button - Admin Only */}
-                  {!sidebarCollapsed && isAdminMode && !editingVideoTitle && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleVideoTitleEdit(video.id);
-                      }}
-                      className={`
-                        p-1 rounded-lg transition-colors opacity-0 group-hover:opacity-100
-                        ${isDarkMode 
-                          ? 'hover:bg-purple-500/20 text-purple-400 hover:text-purple-300' 
-                          : 'hover:bg-purple-100 text-purple-500 hover:text-purple-600'
-                        }
-                      `}
-                      title="Edit title"
-                    >
-                      <Settings className="w-4 h-4" />
-                    </button>
-                  )}
                 </div>
 
                 {/* Delete Button - Admin Only */}
