@@ -653,11 +653,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                        >
                          {title}
                        </h1>
-                       {isAdminMode && (
-                         <div className={`absolute -top-2 -right-2 text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-purple-100 text-purple-700 border border-purple-300'}`}>
-                           ✏️
-                         </div>
-                       )}
                      </div>
                    )}
 
@@ -684,11 +679,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                        >
                          {subtitle}
                        </p>
-                       {isAdminMode && (
-                         <div className={`absolute -top-1 -right-2 text-xs px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-slate-500/20 text-slate-300 border border-slate-500/30' : 'bg-slate-100 text-slate-600 border border-slate-300'}`}>
-                           ✏️
-                         </div>
-                       )}
                      </div>
                    )}
 
@@ -700,12 +690,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                          <span className={`text-sm font-medium ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
                            Admin Edit Mode
                          </span>
-                       </div>
-                       <div className={`text-xs text-center px-4 py-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>
-                         💡 Click on titles, subtitles, or video names to edit them
-                       </div>
-                       <div className={`text-xs text-center px-4 py-2 rounded-lg mt-2 ${isDarkMode ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-green-100 text-green-700 border border-green-300'}`}>
-                         🔧 Debug: Admin Mode: {isAdminMode ? 'ON' : 'OFF'} | Videos: {videos.length} | Current: {currentVideo?.id || 'None'}
                        </div>
                      </div>
                    )}
@@ -754,11 +738,6 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                                >
                                  {currentVideo.title}
                                </h2>
-                               {isAdminMode && (
-                                 <div className={`text-xs px-2 py-1 rounded-full ${isDarkMode ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-blue-100 text-blue-700 border border-blue-300'}`}>
-                                   ✏️ Click to edit
-                                 </div>
-                               )}
                              </div>
                            )}
                          </div>
