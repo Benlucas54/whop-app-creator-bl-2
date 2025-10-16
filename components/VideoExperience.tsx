@@ -53,6 +53,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingSubtitle, setEditingSubtitle] = useState(false);
   const [editingVideoTitle, setEditingVideoTitle] = useState<string | null>(null);
+  const [editingVideoUrl, setEditingVideoUrl] = useState<string | null>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [title, setTitle] = useState('Welcome to Your Video Experience');
   const [subtitle, setSubtitle] = useState('Share, react, and engage with videos like never before');
@@ -115,6 +116,22 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
     }
     
     return null;
+  };
+
+  const getOriginalUrlFromEmbed = (embedUrl: string): string => {
+    // Convert YouTube embed URL back to original
+    if (embedUrl.includes('youtube.com/embed/')) {
+      const videoId = embedUrl.split('youtube.com/embed/')[1];
+      return `https://www.youtube.com/watch?v=${videoId}`;
+    }
+    
+    // Convert Loom embed URL back to original
+    if (embedUrl.includes('loom.com/embed/')) {
+      const videoId = embedUrl.split('loom.com/embed/')[1];
+      return `https://www.loom.com/share/${videoId}`;
+    }
+    
+    return embedUrl; // Return as-is if not a recognized embed URL
   };
 
   const handleLoadVideo = async () => {
@@ -208,6 +225,36 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
       handleVideoTitleSave(videoId, e.currentTarget.value);
     } else if (e.key === 'Escape') {
       setEditingVideoTitle(null);
+    }
+  };
+
+  const handleVideoUrlEdit = (videoId: string) => {
+    setEditingVideoUrl(videoId);
+  };
+
+  const handleVideoUrlSave = (videoId: string, newUrl: string) => {
+    const embedUrl = getVideoEmbedUrl(newUrl);
+    if (embedUrl) {
+      setVideos(prev => prev.map(video => 
+        video.id === videoId ? { ...video, url: embedUrl } : video
+      ));
+      
+      // Update the current video URL if it's the one being edited
+      if (currentVideo?.id === videoId) {
+        setCurrentVideo(prev => prev ? { ...prev, url: embedUrl } : null);
+      }
+    } else {
+      alert('Please enter a valid YouTube or Loom video URL');
+    }
+    
+    setEditingVideoUrl(null);
+  };
+
+  const handleVideoUrlKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, videoId: string) => {
+    if (e.key === 'Enter') {
+      handleVideoUrlSave(videoId, e.currentTarget.value);
+    } else if (e.key === 'Escape') {
+      setEditingVideoUrl(null);
     }
   };
 
@@ -568,9 +615,26 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                 shadow-2xl
               `}>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {currentVideo.title}
-                  </h2>
+                  {editingVideoTitle === currentVideo.id && isAdminMode ? (
+                    <input
+                      type="text"
+                      defaultValue={currentVideo.title}
+                      onBlur={(e) => handleVideoTitleSave(currentVideo.id, e.target.value)}
+                      onKeyDown={(e) => handleVideoTitleKeyDown(e, currentVideo.id)}
+                      className={`
+                        text-2xl font-semibold bg-transparent border-none outline-none
+                        ${isDarkMode ? 'text-white' : 'text-gray-900'}
+                      `}
+                      autoFocus
+                    />
+                  ) : (
+                    <h2 
+                      onClick={isAdminMode ? () => handleVideoTitleEdit(currentVideo.id) : undefined}
+                      className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'} ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                    >
+                      {currentVideo.title}
+                    </h2>
+                  )}
                   <div className="flex items-center gap-2 text-sm text-slate-500">
                     <span>{currentVideo.duration}</span>
                     <span>•</span>
@@ -578,10 +642,62 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                   </div>
                 </div>
 
+                {/* Admin Video URL Edit */}
+                {isAdminMode && (
+                  <div className="mb-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700/50">
+                    <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Video URL (Admin Edit)
+                    </h3>
+                    {editingVideoUrl === currentVideo.id ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          defaultValue={getOriginalUrlFromEmbed(currentVideo.url)}
+                          onBlur={(e) => handleVideoUrlSave(currentVideo.id, e.target.value)}
+                          onKeyDown={(e) => handleVideoUrlKeyDown(e, currentVideo.id)}
+                          placeholder="Enter YouTube or Loom URL..."
+                          className={`
+                            flex-1 px-3 py-2 rounded-lg text-sm bg-transparent border border-slate-600/50
+                            ${isDarkMode ? 'text-white placeholder-slate-400' : 'text-gray-900 placeholder-slate-500'}
+                            focus:outline-none focus:border-purple-500/50
+                          `}
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => setEditingVideoUrl(null)}
+                          className={`px-3 py-2 text-sm rounded-lg ${
+                            isDarkMode 
+                              ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300' 
+                              : 'bg-slate-200/50 hover:bg-slate-300/50 text-slate-600'
+                          }`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm truncate flex-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {getOriginalUrlFromEmbed(currentVideo.url)}
+                        </span>
+                        <button
+                          onClick={() => handleVideoUrlEdit(currentVideo.id)}
+                          className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                            isDarkMode 
+                              ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30' 
+                              : 'bg-purple-100 hover:bg-purple-200 text-purple-600 border border-purple-300'
+                          }`}
+                        >
+                          Edit URL
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Video Player */}
                 <div className="relative w-full mb-6" style={{ paddingBottom: '56.25%' }}>
                   <iframe
-                    src={currentVideo.embedUrl}
+                    src={currentVideo.url}
                     className="absolute top-0 left-0 w-full h-full rounded-xl"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
