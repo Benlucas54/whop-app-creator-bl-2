@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { whopSdk } from '@/lib/whop-sdk';
+import { whopStorage, type ExperienceData } from '@/lib/whop-storage';
 import { headers } from 'next/headers';
 
-interface VideoData {
-  id: string;
-  title: string;
-  url: string;
-  duration: string;
-  createdAt: string;
-}
-
-interface ExperienceData {
-  title: string;
-  subtitle: string;
-  videos: VideoData[];
-}
+// Types are now imported from whop-storage.ts
 
 // GET - Retrieve experience data
 export async function GET(request: NextRequest) {
@@ -38,14 +27,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // For now, we'll use a simple approach since Whop SDK doesn't expose metadata
-    // In a production app, you might want to use a separate database or storage solution
+    // Try to retrieve stored data from Whop storage
     try {
-      // This is a placeholder - in a real implementation, you'd store data in a database
-      // or use Whop's storage API if available
-      console.log('Checking for stored data for experience:', experienceId);
+      const apiKey = process.env.WHOP_API_KEY;
+      if (!apiKey) {
+        console.log('No WHOP_API_KEY found, returning defaults');
+      } else {
+        const storedData = await whopStorage.getExperienceData(experienceId, apiKey);
+        if (storedData) {
+          console.log('Retrieved stored data for experience:', experienceId);
+          return NextResponse.json(storedData);
+        }
+      }
     } catch (error) {
-      console.log('No stored data found, returning defaults');
+      console.log('No stored data found, returning defaults:', error);
     }
 
     // Return default data if no stored data found
@@ -108,15 +103,22 @@ export async function PUT(request: NextRequest) {
 
     const data: ExperienceData = await request.json();
 
-    // Store data - for now we'll use a simple approach
-    // In a production app, you'd use a proper database or storage solution
+    // Store data using Whop storage
     try {
-      // This is a placeholder - in a real implementation, you'd save to a database
-      console.log('Saving data for experience:', experienceId, data);
+      const apiKey = process.env.WHOP_API_KEY;
+      if (!apiKey) {
+        return NextResponse.json({ success: false, error: 'Storage not configured' }, { status: 500 });
+      }
+
+      const success = await whopStorage.saveExperienceData(experienceId, data, apiKey);
       
-      // For now, we'll just return success
-      // The data will persist in the client-side state during the session
-      return NextResponse.json({ success: true, data });
+      if (success) {
+        console.log('Successfully saved data for experience:', experienceId);
+        return NextResponse.json({ success: true, data });
+      } else {
+        console.error('Failed to save data for experience:', experienceId);
+        return NextResponse.json({ success: false, error: 'Failed to save to storage' }, { status: 500 });
+      }
     } catch (error) {
       console.error('Error saving experience data:', error);
       return NextResponse.json({ success: false, error: 'Failed to save data' }, { status: 500 });

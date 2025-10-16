@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { clientStorage } from '@/lib/client-storage';
+import type { ExperienceData, VideoData } from '@/lib/whop-storage';
 
 interface User {
   name?: string | null;
@@ -32,13 +34,8 @@ interface VideoExperienceProps {
   hasAccess: boolean;
 }
 
-interface VideoItem {
-  id: string;
-  title: string;
-  url: string;
-  duration: string;
-  createdAt: string;
-}
+// VideoItem type is now imported from whop-storage as VideoData
+type VideoItem = VideoData;
 
 export default function VideoExperience({ user, experience, accessLevel, hasAccess }: VideoExperienceProps) {
   const displayName = user.name || user.username;
@@ -75,22 +72,28 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const loadExperienceData = async () => {
     try {
       setIsLoadingData(true);
-      const response = await fetch(`/api/experience-data?experienceId=${experience.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTitle(data.title || 'Welcome to Your Video Experience');
-        setSubtitle(data.subtitle || 'Share, react, and engage with videos like never before');
-        
-        // Convert string dates back to Date objects for display
-        const videosWithDates = data.videos?.map((video: VideoItem) => ({
-          ...video,
-          createdAt: video.createdAt
-        })) || [];
-        
-        setVideos(videosWithDates);
+      const data = await clientStorage.loadExperienceData(experience.id);
+      
+      if (data && clientStorage.validateExperienceData(data)) {
+        setTitle(data.title);
+        setSubtitle(data.subtitle);
+        setVideos(data.videos);
+        console.log('Loaded experience data from storage:', data);
+      } else {
+        // Use default data if no stored data found
+        const defaultData = clientStorage.createDefaultData();
+        setTitle(defaultData.title);
+        setSubtitle(defaultData.subtitle);
+        setVideos(defaultData.videos);
+        console.log('Using default experience data');
       }
     } catch (error) {
       console.error('Error loading experience data:', error);
+      // Fallback to default data
+      const defaultData = clientStorage.createDefaultData();
+      setTitle(defaultData.title);
+      setSubtitle(defaultData.subtitle);
+      setVideos(defaultData.videos);
     } finally {
       setIsLoadingData(false);
     }
@@ -99,19 +102,16 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const saveExperienceData = async (data: { title: string; subtitle: string; videos: VideoItem[] }) => {
     try {
       setIsSaving(true);
-      const response = await fetch(`/api/experience-data?experienceId=${experience.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save data');
+      const result = await clientStorage.saveExperienceData(experience.id, data);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save data');
       }
+      
+      console.log('Successfully saved experience data:', result.data);
     } catch (error) {
       console.error('Error saving experience data:', error);
+      // You could add user notification here
     } finally {
       setIsSaving(false);
     }
