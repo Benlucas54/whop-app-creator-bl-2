@@ -52,6 +52,7 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
   const [isLoading, setIsLoading] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingSubtitle, setEditingSubtitle] = useState(false);
+  const [editingVideoTitle, setEditingVideoTitle] = useState<string | null>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [title, setTitle] = useState('Welcome to Your Video Experience');
   const [subtitle, setSubtitle] = useState('Share, react, and engage with videos like never before');
@@ -185,6 +186,25 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
     }
   };
 
+  const handleVideoTitleEdit = (videoId: string) => {
+    setEditingVideoTitle(videoId);
+  };
+
+  const handleVideoTitleSave = (videoId: string, newTitle: string) => {
+    setVideos(prev => prev.map(video => 
+      video.id === videoId ? { ...video, title: newTitle } : video
+    ));
+    setEditingVideoTitle(null);
+  };
+
+  const handleVideoTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, videoId: string) => {
+    if (e.key === 'Enter') {
+      handleVideoTitleSave(videoId, e.currentTarget.value);
+    } else if (e.key === 'Escape') {
+      setEditingVideoTitle(null);
+    }
+  };
+
   return (
     <div className={`min-h-screen transition-all duration-500 ${
       isDarkMode 
@@ -295,13 +315,37 @@ export default function VideoExperience({ user, experience, accessLevel, hasAcce
                   
                   {!sidebarCollapsed && (
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-medium truncate ${
-                        currentVideo?.id === video.id 
-                          ? (isDarkMode ? 'text-white' : 'text-gray-900')
-                          : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
-                      }`}>
-                        {video.title}
-                      </h3>
+                      {editingVideoTitle === video.id && isAdminMode ? (
+                        <input
+                          type="text"
+                          defaultValue={video.title}
+                          onBlur={(e) => handleVideoTitleSave(video.id, e.target.value)}
+                          onKeyDown={(e) => handleVideoTitleKeyDown(e, video.id)}
+                          className={`
+                            w-full bg-transparent border-none outline-none font-medium text-sm
+                            ${currentVideo?.id === video.id 
+                              ? (isDarkMode ? 'text-white' : 'text-gray-900')
+                              : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
+                            }
+                          `}
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <h3 
+                          onClick={isAdminMode ? (e) => {
+                            e.stopPropagation();
+                            handleVideoTitleEdit(video.id);
+                          } : undefined}
+                          className={`font-medium truncate ${
+                            currentVideo?.id === video.id 
+                              ? (isDarkMode ? 'text-white' : 'text-gray-900')
+                              : (isDarkMode ? 'text-slate-200' : 'text-slate-700')
+                          } ${isAdminMode ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                        >
+                          {video.title}
+                        </h3>
+                      )}
                       <p className={`text-sm truncate ${
                         isDarkMode ? 'text-slate-400' : 'text-slate-500'
                       }`}>
