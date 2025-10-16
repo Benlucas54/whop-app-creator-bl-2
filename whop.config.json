@@ -1,0 +1,7 @@
+{
+  "name": "Loom Embed",
+  "slug": "loom-embed",
+  "version": "1.0.0",
+  "show_settings": true,
+  "permissions": ["read:user", "update:settings"]
+}
